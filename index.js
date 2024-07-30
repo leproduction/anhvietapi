@@ -37,7 +37,7 @@ app.post('/submit', async (req, res) => {
     }
 
     try {
-        const user = await RegisterModel.findOne({ email });
+        const user = RegisterModel.findOne({ email });
         if (user) {
             return res.json("Already submitted");
         } else {
