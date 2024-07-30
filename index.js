@@ -83,6 +83,9 @@ app.post('/signin', async (req, res) => {
     try {
         const existingUser = await RegisterModel.findOne({ email });
         if (existingUser) {
+            console.log("User found:", existingUser.email);
+            console.log("Attempting to verify password:", password);
+
             const matchedPassword = await bcrypt.compare(password, existingUser.password);
             if (matchedPassword) {
                 console.log("Verified Password");
@@ -92,7 +95,7 @@ app.post('/signin', async (req, res) => {
                 res.status(401).json("Incorrect Password");
             }
         } else {
-            console.log("User is not Found");
+            console.log("User not found");
             res.status(404).json("User is not Found");
         }
     } catch (error) {
