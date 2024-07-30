@@ -3,17 +3,17 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const RegisterModel = require('./Register');
+ // Load environment variables from a .env file
 
 const app = express();
 
-
-app.use(cors({
-    origin: "https://anhviet.vercel.app",
-    methods: ["POST", "GET"],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    optionsSuccessStatus: 200 // For legacy browser support
-}));
+app.use(cors(
+    {
+        origin: ["https://anhviet.vercel.app"],
+        methods: ["POST", "GET"],
+        credentials: true
+    }
+));
 
 app.use(express.json());
 
@@ -25,21 +25,22 @@ mongoose.connect('mongodb+srv://portfolio:port@portfolio.rsdq3hc.mongodb.net/?re
         console.error("Network Error", error);
     });
 
-
-
-
-app.post('/submit', (req, res) => {
+app.get("/", (req, res) => {
+    res.json("Information");
+})
+app.post('/submit', async (req, res) => {
     const { name, email, tel, note } = req.body;
-    RegisterModel.findOne({ email: email })
-        .then(user => {
-            if (user) {
-                res.json("Already submitted");
-            } else {
-                RegisterModel.create({ name, email, tel, note })
-                    .then(result => res.json(result))
-                    .catch(err => res.status(500).json({ message: "Error creating record", error: err.message }));
-            }
-        }).catch(err => res.status(500).json({ message: "Database Error", error: err.message }));
+    try {
+        const user = await RegisterModel.findOne({ email });
+        if (user) {
+            res.json("Already submitted");
+        } else {
+            const result = await RegisterModel.create({ name, email, tel, note });
+            res.json(result);
+        }
+    } catch (err) {
+        res.status(500).json({ message: "Database Error", error: err.message });
+    }
 });
 
 app.post('/signup', async (req, res) => {
@@ -51,13 +52,13 @@ app.post('/signup', async (req, res) => {
         if (existingUser) {
             console.log("User already exists with email:", email);
             return res.status(400).json({ message: "User already exists" });
-        } else {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
-            await newUser.save();
-            console.log("New user created:", newUser);
-            return res.status(201).json(newUser);
         }
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
+        await newUser.save();
+        console.log("New user created:", newUser);
+        return res.status(201).json(newUser);
     } catch (err) {
         console.error("Error during signup:", err);
         return res.status(500).json({ message: "Internal Server Error", error: err.message });
@@ -121,6 +122,16 @@ app.get('/users', async (req, res) => {
     }
 });
 
-app.listen(3002, () => {
-    console.log("Server is Running on port 3002");
-});"
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+const PORT = 3002;
+app.listen(PORT, () => {
+    console.log(`Server is Running on port ${PORT}`);
+});
