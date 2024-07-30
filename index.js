@@ -30,18 +30,26 @@ app.get("/", (req, res) => {
 })
 app.post('/submit', async (req, res) => {
     const { name, email, tel, note } = req.body;
+
+    // Simple validation
+    if (!name || !email || !tel || !note) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
     try {
         const user = await RegisterModel.findOne({ email });
         if (user) {
-            res.json("Already submitted");
+            return res.json("Already submitted");
         } else {
             const result = await RegisterModel.create({ name, email, tel, note });
-            res.json(result);
+            return res.json(result);
         }
     } catch (err) {
-        res.status(500).json({ message: "Database Error", error: err.message });
+        console.error("Database Error:", err); // Log the error for debugging
+        return res.status(500).json({ message: "Database Error", error: err.message });
     }
 });
+
 
 app.post('/signup', async (req, res) => {
     const { name, email, tel, password } = req.body;
