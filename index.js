@@ -50,21 +50,25 @@ app.post('/submit', async (req, res) => {
     }
 });
 
-
 app.post('/signup', async (req, res) => {
     const { name, email, tel, password } = req.body;
     console.log("Received signup request:", req.body);
 
     try {
-        const existingUser = RegisterModel.findOne({ email });
+        // Check if user already exists
+        const existingUser = await RegisterModel.findOne({ email });
         if (existingUser) {
             console.log("User already exists with email:", email);
             return res.status(400).json({ message: "User already exists" });
         }
-        
-        const hashedPassword = bcrypt.hash(password, 10);
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create a new user
         const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
-         newUser.save();
+        await newUser.save();
+
         console.log("New user created:", newUser);
         return res.status(201).json(newUser);
     } catch (err) {
@@ -72,6 +76,7 @@ app.post('/signup', async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error", error: err.message });
     }
 });
+
 
 app.post('/signin', async (req, res) => {
     const { email, password } = req.body;
