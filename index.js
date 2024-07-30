@@ -56,7 +56,7 @@ app.post('/signup', async (req, res) => {
     console.log("Received signup request:", req.body);
 
     try {
-        const existingUser = await RegisterModel.findOne({ email });
+        const existingUser = RegisterModel.findOne({ email });
         if (existingUser) {
             console.log("User already exists with email:", email);
             return res.status(400).json({ message: "User already exists" });
