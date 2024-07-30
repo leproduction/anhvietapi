@@ -6,7 +6,6 @@ const RegisterModel = require('./Register');
 
 const app = express();
 
-
 app.use(cors({
     origin: "https://anhviet.vercel.app",
     methods: ["POST", "GET"],
@@ -25,21 +24,31 @@ mongoose.connect('mongodb+srv://portfolio:port@portfolio.rsdq3hc.mongodb.net/?re
         console.error("Network Error", error);
     });
 
-
-
-
 app.post('/submit', (req, res) => {
     const { name, email, tel, note } = req.body;
+    console.log("Received submit request:", req.body);
+
     RegisterModel.findOne({ email: email })
         .then(user => {
             if (user) {
+                console.log("Email already submitted:", email);
                 res.json("Already submitted");
             } else {
                 RegisterModel.create({ name, email, tel, note })
-                    .then(result => res.json(result))
-                    .catch(err => res.status(500).json({ message: "Error creating record", error: err.message }));
+                    .then(result => {
+                        console.log("New record created:", result);
+                        res.json(result);
+                    })
+                    .catch(err => {
+                        console.error("Error creating record:", err);
+                        res.status(500).json({ message: "Error creating record", error: err.message });
+                    });
             }
-        }).catch(err => res.status(500).json({ message: "Database Error", error: err.message }));
+        })
+        .catch(err => {
+            console.error("Database error:", err);
+            res.status(500).json({ message: "Database Error", error: err.message });
+        });
 });
 
 app.post('/signup', async (req, res) => {
@@ -66,6 +75,8 @@ app.post('/signup', async (req, res) => {
 
 app.post('/signin', async (req, res) => {
     const { email, password } = req.body;
+    console.log("Received signin request:", req.body);
+
     try {
         const existingUser = await RegisterModel.findOne({ email });
         if (existingUser) {
@@ -89,6 +100,8 @@ app.post('/signin', async (req, res) => {
 
 app.post('/admin', async (req, res) => {
     const { email, password } = req.body;
+    console.log("Received admin signin request:", req.body);
+
     try {
         const existingUser = await RegisterModel.findOne({ email: 'admin@gmail.com' });
         if (existingUser) {
@@ -123,4 +136,4 @@ app.get('/users', async (req, res) => {
 
 app.listen(3002, () => {
     console.log("Server is Running on port 3002");
-});"
+});
