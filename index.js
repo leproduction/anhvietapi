@@ -49,7 +49,9 @@ app.post('/submit', async (req, res) => {
         return res.status(500).json({ message: "Database Error", error: err.message });
     }
 });
+const bcrypt = require('bcryptjs'); // Ensure bcryptjs is used
 
+// Sign-up route
 app.post('/signup', async (req, res) => {
     const { name, email, tel, password } = req.body;
     console.log("Received signup request:", req.body);
@@ -64,6 +66,7 @@ app.post('/signup', async (req, res) => {
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
+        console.log("Hashed password:", hashedPassword);
 
         // Create a new user
         const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
@@ -77,30 +80,33 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-
+// Sign-in route
 app.post('/signin', async (req, res) => {
     const { email, password } = req.body;
+    console.log("Received signin request:", req.body);
+
     try {
         const existingUser = await RegisterModel.findOne({ email });
         if (existingUser) {
             console.log("User found:", existingUser.email);
+            console.log("Stored hashed password:", existingUser.password);
             console.log("Attempting to verify password:", password);
 
             const matchedPassword = await bcrypt.compare(password, existingUser.password);
             if (matchedPassword) {
                 console.log("Verified Password");
-                res.status(200).json("Sign in successfully");
+                return res.status(200).json("Sign in successfully");
             } else {
                 console.log("Incorrect Password");
-                res.status(401).json("Incorrect Password");
+                return res.status(401).json("Incorrect Password");
             }
         } else {
             console.log("User not found");
-            res.status(404).json("User is not Found");
+            return res.status(404).json("User is not Found");
         }
     } catch (error) {
         console.error("Error during sign-in:", error);
-        res.status(500).json({ message: "Internal Server Error", error: error.message });
+        return res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
