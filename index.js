@@ -57,59 +57,45 @@ app.post('/signup', async (req, res) => {
     console.log("Received signup request:", req.body);
 
     try {
-        // Check if user already exists
         const existingUser = await RegisterModel.findOne({ email });
         if (existingUser) {
             console.log("User already exists with email:", email);
             return res.status(400).json({ message: "User already exists" });
+        } else {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
+            await newUser.save();
+            console.log("New user created:", newUser);
+            return res.status(201).json(newUser);
         }
-
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        console.log("Hashed password:", hashedPassword);
-
-        // Create a new user
-        const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
-        await newUser.save();
-
-        console.log("New user created:", newUser);
-        return res.status(201).json(newUser);
     } catch (err) {
         console.error("Error during signup:", err);
         return res.status(500).json({ message: "Internal Server Error", error: err.message });
     }
 });
 
-// Sign-in route
 app.post('/signin', async (req, res) => {
     const { email, password } = req.body;
-    console.log("Received signin request:", req.body);
-
     try {
         const existingUser = await RegisterModel.findOne({ email });
         if (existingUser) {
-            console.log("User found:", existingUser.email);
-            console.log("Stored hashed password:", existingUser.password);
-            console.log("Attempting to verify password:", password);
-
             const matchedPassword = await bcrypt.compare(password, existingUser.password);
             if (matchedPassword) {
                 console.log("Verified Password");
-                return res.status(200).json("Sign in successfully");
+                res.status(200).json("Sign in successfully");
             } else {
                 console.log("Incorrect Password");
-                return res.status(401).json("Incorrect Password");
+                res.status(401).json("Incorrect Password");
             }
         } else {
-            console.log("User not found");
-            return res.status(404).json("User is not Found");
+            console.log("User is not Found");
+            res.status(404).json("User is not Found");
         }
     } catch (error) {
         console.error("Error during sign-in:", error);
-        return res.status(500).json({ message: "Internal Server Error", error: error.message });
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
-
 app.post('/admin', async (req, res) => {
     const { email, password } = req.body;
     try {
