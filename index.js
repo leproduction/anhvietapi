@@ -93,6 +93,8 @@ app.post('/signin', async (req, res) => {
             console.log("Attempting to verify password:", password);
 
             const matchedPassword = await bcrypt.compare(password, existingUser.password);
+            console.log("Password match result:", matchedPassword);
+
             if (matchedPassword) {
                 console.log("Verified Password");
                 return res.status(200).json("Sign in successfully");
@@ -109,6 +111,7 @@ app.post('/signin', async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
+
 
 app.post('/admin', async (req, res) => {
     const { email, password } = req.body;
