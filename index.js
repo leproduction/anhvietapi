@@ -64,12 +64,8 @@ app.post('/signup', async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        console.log("Hashed password:", hashedPassword);
-
         // Create a new user
-        const newUser = new RegisterModel({ name, email, tel, password: hashedPassword });
+        const newUser = new RegisterModel({ name, email, tel, password });
         await newUser.save();
 
         console.log("New user created:", newUser);
